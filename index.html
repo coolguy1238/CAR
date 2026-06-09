@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VAG HQ — Birmingham's VAG Specialists</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --black:    #080808;
+    --graphite: #111111;
+    --panel:    #171717;
+    --border:   #2a2a2a;
+    --red:      #c8102e;
+    --red-glow: rgba(200,16,46,0.25);
+    --white:    #f0f0f0;
+    --muted:    #888888;
+    --font-display: 'Bebas Neue', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    --font-mono: 'Space Mono', monospace;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--black);
+    color: var(--white);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 5vw;
+    height: 64px;
+    background: rgba(8,8,8,0.88);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-logo {
+    font-family: var(--font-display);
+    font-size: 1.8rem;
+    letter-spacing: 0.12em;
+    color: var(--white);
+    text-decoration: none;
+  }
+  .nav-logo span { color: var(--red); }
+
+  .nav-links {
+    display: flex;
+    gap: 2.5rem;
+    list-style: none;
+    align-items: center;
+  }
+  .nav-links a {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--white); }
+
+  .nav-cta {
+    background: var(--red) !important;
+    color: var(--white) !important;
+    padding: 0.5rem 1.2rem;
+    border-radius: 2px;
+    transition: background 0.2s, box-shadow 0.2s !important;
+  }
+  .nav-cta:hover { background: #e8001e !important; box-shadow: 0 0 20px var(--red-glow); }
+
+  .hamburger {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 4px;
+  }
+  .hamburger span {
+    display: block; width: 24px; height: 2px;
+    background: var(--white); transition: all 0.3s;
+  }
+
+  /* ── HERO ── */
+  #hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 0 5vw;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-bg {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 60% 40% at 50% 60%, rgba(200,16,46,0.12) 0%, transparent 70%),
+      linear-gradient(180deg, var(--black) 0%, #0d0d0d 100%);
+  }
+
+  .hero-grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(42,42,42,0.4) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(42,42,42,0.4) 1px, transparent 1px);
+    background-size: 80px 80px;
+    mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black, transparent);
+    animation: gridpulse 8s ease-in-out infinite;
+  }
+  @keyframes gridpulse { 0%,100%{opacity:.5} 50%{opacity:1} }
+
+  .hero-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--red);
+    margin-bottom: 1.5rem;
+    position: relative;
+    opacity: 0;
+    animation: fadein 0.8s 0.3s forwards;
+  }
+
+  .hero-title {
+    font-family: var(--font-display);
+    font-size: clamp(5rem, 18vw, 14rem);
+    line-height: 0.9;
+    letter-spacing: 0.04em;
+    color: var(--white);
+    position: relative;
+    opacity: 0;
+    animation: fadein 0.8s 0.5s forwards;
+  }
+  .hero-title span {
+    color: var(--red);
+    display: block;
+    text-shadow: 0 0 60px var(--red-glow);
+  }
+
+  .hero-sub {
+    margin-top: 2rem;
+    font-size: 1.05rem;
+    font-weight: 300;
+    color: var(--muted);
+    max-width: 500px;
+    position: relative;
+    opacity: 0;
+    animation: fadein 0.8s 0.7s forwards;
+  }
+  .hero-sub strong { color: var(--white); font-weight: 500; }
+
+  .hero-actions {
+    margin-top: 2.5rem;
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    position: relative;
+    opacity: 0;
+    animation: fadein 0.8s 0.9s forwards;
+  }
+
+  .btn-primary {
+    background: var(--red); color: var(--white);
+    padding: 0.85rem 2.2rem; border-radius: 2px;
+    font-family: var(--font-mono); font-size: 0.8rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    text-decoration: none;
+    transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
+    display: inline-block;
+  }
+  .btn-primary:hover { background: #e8001e; box-shadow: 0 4px 32px var(--red-glow); transform: translateY(-1px); }
+
+  .btn-secondary {
+    background: transparent; color: var(--white);
+    padding: 0.85rem 2.2rem; border-radius: 2px;
+    border: 1px solid var(--border);
+    font-family: var(--font-mono); font-size: 0.8rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    text-decoration: none;
+    transition: border-color 0.2s, color 0.2s;
+    display: inline-block;
+  }
+  .btn-secondary:hover { border-color: var(--white); }
+
+  .hero-scroll {
+    position: absolute; bottom: 2.5rem; left: 50%; transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    opacity: 0; animation: fadein 1s 1.4s forwards;
+  }
+  .hero-scroll span {
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.2em; color: var(--muted); text-transform: uppercase;
+  }
+  .scroll-line {
+    width: 1px; height: 40px;
+    background: linear-gradient(180deg, var(--red), transparent);
+    animation: scrollpulse 2s ease-in-out infinite;
+  }
+  @keyframes scrollpulse { 0%,100%{opacity:.3} 50%{opacity:1} }
+
+  /* ── BRANDS STRIP ── */
+  .brands-strip {
+    background: var(--panel);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 1.2rem 5vw;
+    display: flex; align-items: center; justify-content: center;
+    gap: 3rem; flex-wrap: wrap;
+  }
+  .brands-strip-label {
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--muted); white-space: nowrap;
+  }
+  .brands-strip-items {
+    display: flex; align-items: center; gap: 2.5rem;
+    flex-wrap: wrap; justify-content: center;
+  }
+  .brand-tag {
+    font-family: var(--font-display); font-size: 1.3rem;
+    letter-spacing: 0.15em; color: var(--muted); transition: color 0.2s;
+  }
+  .brand-tag:hover { color: var(--white); }
+  .brand-sep { color: var(--border); font-size: 1.2rem; }
+
+  /* ── SECTIONS ── */
+  section { padding: 100px 5vw; }
+
+  .section-label {
+    font-family: var(--font-mono); font-size: 0.7rem;
+    letter-spacing: 0.25em; text-transform: uppercase;
+    color: var(--red); margin-bottom: 1rem;
+  }
+  .section-title {
+    font-family: var(--font-display);
+    font-size: clamp(2.5rem, 6vw, 5rem);
+    letter-spacing: 0.04em; line-height: 1;
+    color: var(--white); margin-bottom: 1.5rem;
+  }
+  .section-body {
+    color: var(--muted); font-weight: 300;
+    max-width: 560px; font-size: 1.05rem; line-height: 1.8;
+  }
+  .section-body strong { color: var(--white); font-weight: 500; }
+
+  /* ── SERVICES ── */
+  #services { background: var(--graphite); }
+
+  .services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1px; margin-top: 4rem;
+    border: 1px solid var(--border);
+  }
+
+  .service-card {
+    background: var(--panel);
+    padding: 2.5rem 2rem;
+    border: 1px solid transparent;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative; overflow: hidden;
+  }
+  .service-card::before {
+    content: ''; position: absolute; top: 0; left: 0;
+    width: 3px; height: 0; background: var(--red);
+    transition: height 0.3s ease;
+  }
+  .service-card:hover::before { height: 100%; }
+  .service-card:hover { background: #1c1c1c; }
+
+  .service-icon { font-size: 2rem; margin-bottom: 1.2rem; display: block; }
+  .service-name {
+    font-family: var(--font-display); font-size: 1.6rem;
+    letter-spacing: 0.06em; color: var(--white); margin-bottom: 0.6rem;
+  }
+  .service-desc { color: var(--muted); font-size: 0.9rem; font-weight: 300; line-height: 1.7; }
+
+  /* ── WHY ── */
+  #why { background: var(--black); }
+
+  .why-layout {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 6rem; align-items: center; margin-top: 4rem;
+  }
+
+  .why-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; }
+
+  .stat-box {
+    background: var(--panel); border: 1px solid var(--border);
+    padding: 2rem 1.5rem; transition: border-color 0.2s;
+  }
+  .stat-box:hover { border-color: var(--red); }
+  .stat-number {
+    font-family: var(--font-display); font-size: 3.5rem;
+    letter-spacing: 0.04em; color: var(--red); line-height: 1;
+    text-shadow: 0 0 30px var(--red-glow);
+  }
+  .stat-label {
+    font-family: var(--font-mono); font-size: 0.68rem;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--muted); margin-top: 0.4rem;
+  }
+
+  .why-points { list-style: none; margin-top: 2rem; }
+  .why-points li {
+    display: flex; align-items: flex-start; gap: 1rem;
+    padding: 1.2rem 0; border-bottom: 1px solid var(--border);
+    font-weight: 300; color: var(--muted); font-size: 0.95rem;
+  }
+  .why-points li:last-child { border-bottom: none; }
+  .why-points li::before {
+    content: '—'; color: var(--red); font-family: var(--font-mono);
+    flex-shrink: 0; margin-top: 2px;
+  }
+  .why-points li strong { color: var(--white); font-weight: 500; }
+
+  /* ── CONTACT ── */
+  #contact { background: var(--graphite); border-top: 1px solid var(--border); }
+
+  .contact-layout {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 6rem; margin-top: 4rem; align-items: start;
+  }
+
+  .contact-info { display: flex; flex-direction: column; gap: 2rem; }
+
+  .contact-item { display: flex; flex-direction: column; gap: 0.3rem; }
+  .contact-item-label {
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.2em; text-transform: uppercase; color: var(--red);
+  }
+  .contact-item-value {
+    font-family: var(--font-display); font-size: 1.5rem;
+    letter-spacing: 0.05em; color: var(--white);
+  }
+  .contact-item-value a { color: var(--white); text-decoration: none; transition: color 0.2s; }
+  .contact-item-value a:hover { color: var(--red); }
+  .contact-item-body {
+    font-size: 0.95rem; font-weight: 300; color: var(--muted); line-height: 1.7;
+  }
+  .contact-item-body a { color: var(--muted); text-decoration: none; transition: color 0.2s; }
+  .contact-item-body a:hover { color: var(--white); }
+
+  .socials { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 0.25rem; }
+  .social-btn {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    background: var(--panel); border: 1px solid var(--border);
+    color: var(--muted); padding: 0.6rem 1rem; border-radius: 2px;
+    font-family: var(--font-mono); font-size: 0.68rem;
+    letter-spacing: 0.1em; text-transform: uppercase; text-decoration: none;
+    transition: border-color 0.2s, color 0.2s, background 0.2s;
+  }
+  .social-btn:hover { border-color: var(--white); color: var(--white); background: var(--border); }
+  .social-btn svg { flex-shrink: 0; }
+
+  /* ── MAP EMBED ── */
+  .map-embed {
+    margin-top: 1.5rem;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    height: 180px;
+  }
+  .map-embed iframe { width: 100%; height: 100%; border: none; filter: grayscale(1) invert(0.9) contrast(0.8); }
+
+  /* ── BOOKING FORM ── */
+  .booking-form { display: flex; flex-direction: column; gap: 1rem; }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+  .form-field { display: flex; flex-direction: column; gap: 0.4rem; }
+  .form-field label {
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted);
+  }
+  .form-field input,
+  .form-field select,
+  .form-field textarea {
+    background: var(--panel); border: 1px solid var(--border);
+    color: var(--white); padding: 0.75rem 1rem; border-radius: 2px;
+    font-family: var(--font-body); font-size: 0.9rem;
+    outline: none; transition: border-color 0.2s; width: 100%; appearance: none;
+  }
+  .form-field input:focus,
+  .form-field select:focus,
+  .form-field textarea:focus { border-color: var(--red); }
+  .form-field textarea { resize: vertical; min-height: 100px; }
+  .form-field select option { background: var(--panel); }
+
+  .form-submit {
+    background: var(--red); color: var(--white); border: none;
+    padding: 0.9rem 2rem; border-radius: 2px;
+    font-family: var(--font-mono); font-size: 0.8rem;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    cursor: pointer; transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
+    align-self: flex-start;
+  }
+  .form-submit:hover { background: #e8001e; box-shadow: 0 4px 32px var(--red-glow); transform: translateY(-1px); }
+
+  .form-note {
+    font-family: var(--font-mono); font-size: 0.65rem;
+    color: var(--muted); letter-spacing: 0.05em;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    background: var(--black); border-top: 1px solid var(--border);
+    padding: 2rem 5vw;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 1rem;
+  }
+  .footer-logo {
+    font-family: var(--font-display); font-size: 1.4rem;
+    letter-spacing: 0.1em; color: var(--white);
+  }
+  .footer-logo span { color: var(--red); }
+  .footer-copy {
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.08em; color: var(--muted);
+  }
+  .footer-links { display: flex; gap: 1.5rem; }
+  .footer-links a {
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.08em; color: var(--muted); text-decoration: none;
+    transition: color 0.2s;
+  }
+  .footer-links a:hover { color: var(--white); }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadein {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .reveal { opacity: 0; transform: translateY(30px); transition: opacity 0.7s ease, transform 0.7s ease; }
+  .reveal.visible { opacity: 1; transform: none; }
+
+  /* ── MOBILE ── */
+  @media (max-width: 768px) {
+    .nav-links { display: none; }
+    .nav-links.open {
+      display: flex; flex-direction: column;
+      position: fixed; top: 64px; left: 0; right: 0;
+      background: rgba(8,8,8,0.97); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 1.5rem 5vw 2rem; gap: 1.5rem; z-index: 99;
+    }
+    .nav-links a { font-size: 0.85rem; }
+    .hamburger { display: flex; }
+    .why-layout, .contact-layout { grid-template-columns: 1fr; gap: 3rem; }
+    .form-row { grid-template-columns: 1fr; }
+    .why-stats { grid-template-columns: 1fr 1fr; }
+    .hero-actions { flex-direction: column; align-items: center; }
+    section { padding: 70px 5vw; }
+    footer { flex-direction: column; text-align: center; }
+    .footer-links { justify-content: center; }
+  }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed; bottom: 2rem; right: 2rem;
+    background: var(--panel); border: 1px solid var(--red); color: var(--white);
+    padding: 1rem 1.5rem; border-radius: 4px;
+    font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.05em;
+    box-shadow: 0 4px 32px rgba(0,0,0,0.5);
+    transform: translateY(100px); opacity: 0;
+    transition: all 0.4s cubic-bezier(0.34,1.56,0.64,1); z-index: 200;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#hero" class="nav-logo">VAG<span>HQ</span></a>
+  <ul class="nav-links" id="nav-links">
+    <li><a href="#services">Services</a></li>
+    <li><a href="#why">About</a></li>
+    <li><a href="#contact">Contact</a></li>
+    <li><a href="#contact" class="nav-cta">Book Now</a></li>
+  </ul>
+  <button class="hamburger" id="hamburger" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <p class="hero-eyebrow">Unit 12 Clayton Rd, Birmingham · B8 1JE</p>
+  <h1 class="hero-title">VAG<span>HQ</span></h1>
+  <p class="hero-sub"><strong>TFSI, TSI & LPG specialists.</strong> Dealer-level expertise for Audi, Volkswagen, SEAT & ŠKODA — without the dealer price tag.</p>
+  <div class="hero-actions">
+    <a href="tel:07977010101" class="btn-primary">📞 Call 07977 010101</a>
+    <a href="#services" class="btn-secondary">Our Services</a>
+  </div>
+  <div class="hero-scroll">
+    <span>Scroll</span>
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<!-- BRANDS STRIP -->
+<div class="brands-strip">
+  <span class="brands-strip-label">We Specialise In</span>
+  <div class="brands-strip-items">
+    <span class="brand-tag">AUDI</span>
+    <span class="brand-sep">·</span>
+    <span class="brand-tag">VOLKSWAGEN</span>
+    <span class="brand-sep">·</span>
+    <span class="brand-tag">SEAT</span>
+    <span class="brand-sep">·</span>
+    <span class="brand-tag">ŠKODA</span>
+    <span class="brand-sep">·</span>
+    <span class="brand-tag">CUPRA</span>
+    <span class="brand-sep">·</span>
+    <span class="brand-tag">BMW</span>
+  </div>
+</div>
+
+<!-- SERVICES -->
+<section id="services">
+  <div class="reveal">
+    <p class="section-label">What We Do</p>
+    <h2 class="section-title">Full Workshop<br>Services</h2>
+    <p class="section-body">Most mechanical work carried out in-house — from a routine service to a full engine rebuild. If it's a VAG, we know it inside out.</p>
+  </div>
+  <div class="services-grid reveal">
+    <div class="service-card">
+      <span class="service-icon">⛽</span>
+      <div class="service-name">LPG Conversions</div>
+      <div class="service-desc">Specialists in LPG (liquid petroleum gas) conversions. Cut your fuel costs dramatically while keeping your car running perfectly.</div>
+    </div>
+    <div class="service-card">
+      <span class="service-icon">🔧</span>
+      <div class="service-name">TFSI & TSI Engines</div>
+      <div class="service-desc">Deep expertise in Audi's TFSI and VW's TSI turbocharged petrol engines — the specialists other garages send cars to.</div>
+    </div>
+    <div class="service-card">
+      <span class="service-icon">📋</span>
+      <div class="service-name">Servicing</div>
+      <div class="service-desc">Interim, full, and major services. Genuine and OEM-spec parts, full digital health check included on every visit.</div>
+    </div>
+    <div class="service-card">
+      <span class="service-icon">🔬</span>
+      <div class="service-name">Diagnostics</div>
+      <div class="service-desc">VAG-specific diagnostic tools — the same systems dealers use. We read the codes and fix the root cause, not just the symptom.</div>
+    </div>
+    <div class="service-card">
+      <span class="service-icon">✅</span>
+      <div class="service-name">MOT Testing</div>
+      <div class="service-desc">Authorised MOT test centre. Pass with confidence — or we'll tell you exactly what needs doing and do it right.</div>
+    </div>
+    <div class="service-card">
+      <span class="service-icon">⚙️</span>
+      <div class="service-name">Timing Belt & Chain</div>
+      <div class="service-desc">Cambelt and timing chain replacements done to VAG factory spec. Don't risk it with a garage that guesses.</div>
+    </div>
+    <div class="service-card">
+      <span class="service-icon">🛞</span>
+      <div class="service-name">Brakes & Tyres</div>
+      <div class="service-desc">Pads, discs, callipers, and fluid changes. Plus tyre supply, fitting, alignment, and balancing.</div>
+    </div>
+    <div class="service-card">
+      <span class="service-icon">🔩</span>
+      <div class="service-name">Repairs & Maintenance</div>
+      <div class="service-desc">Suspension, gearbox, cooling, air conditioning — most mechanical work carried out. If it's broken, we'll sort it.</div>
+    </div>
+  </div>
+</section>
+
+<!-- WHY -->
+<section id="why">
+  <div class="why-layout">
+    <div class="reveal">
+      <p class="section-label">Why VAG HQ</p>
+      <h2 class="section-title">Petrolheads.<br>Fair Prices.</h2>
+      <p class="section-body">We're not a general garage that touches everything — we live and breathe VAG. That means deeper knowledge, the right tools, and <strong>none of the inflated dealer labour rates.</strong></p>
+      <ul class="why-points">
+        <li><span><strong>LPG conversion specialists</strong> — a rare skill, done properly</span></li>
+        <li><span><strong>TFSI & TSI engine experts</strong> — the engines most garages won't touch</span></li>
+        <li><span><strong>VAG-specific diagnostics</strong> — same tools the dealers use</span></li>
+        <li><span><strong>Genuine & OEM parts</strong> — no cheap imitations, ever</span></li>
+        <li><span><strong>Transparent, honest pricing</strong> — you know the cost before we start</span></li>
+        <li><span><strong>Based in Birmingham B8</strong> — Unit 12 Clayton Rd, easy to find</span></li>
+      </ul>
+    </div>
+    <div class="why-stats reveal">
+      <div class="stat-box">
+        <div class="stat-number">5+</div>
+        <div class="stat-label">VAG Brands</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number">LPG</div>
+        <div class="stat-label">Specialists</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number">✓</div>
+        <div class="stat-label">MOT Approved</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number">B8</div>
+        <div class="stat-label">Birmingham</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="reveal">
+    <p class="section-label">Get In Touch</p>
+    <h2 class="section-title">Book Your Car In</h2>
+    <p class="section-body">Fill in the form and we'll be in touch to confirm. Prefer to call or message? We're on all the usual platforms.</p>
+  </div>
+  <div class="contact-layout">
+
+    <div class="contact-info reveal">
+
+      <div class="contact-item">
+        <span class="contact-item-label">Phone</span>
+        <div class="contact-item-value"><a href="tel:07977010101">07977 010101</a></div>
+      </div>
+
+      <div class="contact-item">
+        <span class="contact-item-label">Email</span>
+        <div class="contact-item-value" style="font-size:1.1rem;">
+          <a href="mailto:zedfazil@yahoo.com">zedfazil@yahoo.com</a>
+        </div>
+      </div>
+
+      <div class="contact-item">
+        <span class="contact-item-label">Address</span>
+        <div class="contact-item-body">
+          Unit 12 Clayton Road<br>
+          Birmingham<br>
+          B8 1JE<br><br>
+          <a href="https://maps.google.com/?q=Unit+12+Clayton+Road+Birmingham+B8+1JE" target="_blank" rel="noopener">Get Directions →</a>
+        </div>
+        <div class="map-embed">
+          <iframe
+            loading="lazy"
+            allowfullscreen
+            referrerpolicy="no-referrer-when-downgrade"
+            src="https://www.google.com/maps/embed/v1/place?key=AIzaSyD-9tSrke72PouQMnMX-a7eZSW0jkFMBWY&q=Clayton+Road+Birmingham+B8+1JE">
+          </iframe>
+        </div>
+      </div>
+
+      <div class="contact-item">
+        <span class="contact-item-label">Follow & Review Us</span>
+        <div class="socials">
+          <a href="https://www.instagram.com/vag_hq_birmingham?igsh=MXB1MHEyNnlmcGxq" target="_blank" rel="noopener" class="social-btn">
+            <!-- Instagram icon -->
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+            Instagram
+          </a>
+          <a href="https://www.tiktok.com/@vag.hq?_r=1&_t=ZN-974oxit5PHC" target="_blank" rel="noopener" class="social-btn">
+            <!-- TikTok icon -->
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05A6.34 6.34 0 003.15 15.3a6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34v-7.1a8.16 8.16 0 004.77 1.52V6.27a4.85 4.85 0 01-1-.42z"/></svg>
+            TikTok
+          </a>
+          <a href="https://www.facebook.com/p/vag_hq_birmingham-100083313102575/" target="_blank" rel="noopener" class="social-btn">
+            <!-- Facebook icon -->
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073C24 5.404 18.627 0 12 0S0 5.404 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.97h-1.513c-1.491 0-1.956.93-1.956 1.886v2.268h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/></svg>
+            Facebook
+          </a>
+          <a href="https://share.google/HtE9KQdDQF2XxRNJh" target="_blank" rel="noopener" class="social-btn">
+            <!-- Google star icon -->
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            Google Reviews
+          </a>
+        </div>
+      </div>
+
+    </div>
+
+    <form class="booking-form reveal" id="booking-form">
+      <div class="form-row">
+        <div class="form-field">
+          <label for="name">Your Name</label>
+          <input type="text" id="name" placeholder="John Smith" required>
+        </div>
+        <div class="form-field">
+          <label for="phone">Phone Number</label>
+          <input type="tel" id="phone" placeholder="07700 000000" required>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label for="vehicle">Vehicle (make, model, year)</label>
+          <input type="text" id="vehicle" placeholder="e.g. Audi A3 TFSI 2019">
+        </div>
+        <div class="form-field">
+          <label for="service">Service Required</label>
+          <select id="service">
+            <option value="">Select a service…</option>
+            <option>LPG Conversion</option>
+            <option>Full Service</option>
+            <option>Interim Service</option>
+            <option>MOT Test</option>
+            <option>Diagnostics</option>
+            <option>TFSI / TSI Engine Work</option>
+            <option>Timing Belt / Chain</option>
+            <option>Brakes & Tyres</option>
+            <option>Gearbox Service</option>
+            <option>Air Conditioning</option>
+            <option>Other Repair</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-field">
+        <label for="message">Tell Us More</label>
+        <textarea id="message" placeholder="Warning lights, noises, service history — anything helps us prepare…"></textarea>
+      </div>
+      <button type="submit" class="form-submit">Send Booking Request →</button>
+      <p class="form-note">We'll be in touch within 24 hours to confirm your slot.</p>
+    </form>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">VAG<span>HQ</span></div>
+  <div class="footer-links">
+    <a href="https://www.instagram.com/vag_hq_birmingham?igsh=MXB1MHEyNnlmcGxq" target="_blank" rel="noopener">Instagram</a>
+    <a href="https://www.tiktok.com/@vag.hq?_r=1&_t=ZN-974oxit5PHC" target="_blank" rel="noopener">TikTok</a>
+    <a href="https://www.facebook.com/p/vag_hq_birmingham-100083313102575/" target="_blank" rel="noopener">Facebook</a>
+    <a href="https://share.google/HtE9KQdDQF2XxRNJh" target="_blank" rel="noopener">Google</a>
+  </div>
+  <span class="footer-copy">© 2025 VAG HQ · Unit 12 Clayton Rd, Birmingham B8 1JE</span>
+</footer>
+
+<div class="toast" id="toast">✓ Request sent — we'll call you to confirm your slot.</div>
+
+<script>
+  // Hamburger menu
+  const ham = document.getElementById('hamburger');
+  const navLinks = document.getElementById('nav-links');
+  ham.addEventListener('click', () => navLinks.classList.toggle('open'));
+  document.querySelectorAll('.nav-links a').forEach(a => a.addEventListener('click', () => navLinks.classList.remove('open')));
+
+  // Scroll reveal
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
+  // Form submit
+  document.getElementById('booking-form').addEventListener('submit', e => {
+    e.preventDefault();
+    const toast = document.getElementById('toast');
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 4000);
+    e.target.reset();
+  });
+</script>
+</body>
+</html>
