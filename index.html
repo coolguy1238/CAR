@@ -737,7 +737,7 @@ let lc=0,lt;
 document.getElementById('nav-logo').addEventListener('click',ev=>{
   ev.preventDefault();lc++;clearTimeout(lt);
   lt=setTimeout(()=>lc=0,600);
-  if(lc>=3){lc=0;if(!sessionStorage.getItem('vaghq_admin')){document.getElementById('amodal').classList.add('open');setTimeout(()=>document.getElementById('au').focus(),100)}}
+  if(lc>=3){lc=0;if(!localStorage.getItem('vaghq_admin')){document.getElementById('amodal').classList.add('open');setTimeout(()=>document.getElementById('au').focus(),100)}}
 });
 
 async function doLogin(){
@@ -745,7 +745,7 @@ async function doLogin(){
   const p=document.getElementById('ap').value;
   const [uh,ph]=await Promise.all([sha256(u),sha256(p)]);
   if(uh===ADMIN_USER_HASH&&ph===ADMIN_PASS_HASH){
-    sessionStorage.setItem('vaghq_admin','1');
+    localStorage.setItem('vaghq_admin','1');
     document.getElementById('amodal').classList.remove('open');
     document.getElementById('abar').classList.add('active');
     document.body.classList.add('admin-on');
@@ -760,7 +760,7 @@ document.getElementById('ap').addEventListener('keydown',e=>{if(e.key==='Enter')
 document.getElementById('aclose').addEventListener('click',()=>{document.getElementById('amodal').classList.remove('open');document.getElementById('aerr').style.display='none'});
 
 document.getElementById('btn-logout').addEventListener('click',()=>{
-  sessionStorage.removeItem('vaghq_admin');
+  localStorage.removeItem('vaghq_admin');
   document.getElementById('abar').classList.remove('active');
   document.body.classList.remove('admin-on','edit-mode');
   document.getElementById('cpanel').classList.remove('open');
@@ -885,9 +885,14 @@ async function delBooking(id){
 }
 
 // ═══════════════════════════════════════════════════════════════
-// ON PAGE LOAD — restore saved content & colours from Supabase
+// ON PAGE LOAD — restore admin session + saved content & colours
 // ═══════════════════════════════════════════════════════════════
 (async function(){
+  // Restore admin bar if already logged in
+  if(localStorage.getItem('vaghq_admin')){
+    document.getElementById('abar').classList.add('active');
+    document.body.classList.add('admin-on');
+  }
   try {
     const row = await loadContentFromDb();
     if(row) {
