@@ -606,46 +606,159 @@ html{-webkit-overflow-scrolling:touch}
   <div class="bentries" id="bentries"></div>
 </div>
 <script>
-const ADMIN_USER='vaghq',ADMIN_PASS='Clayton12!';
+// ═══════════════════════════════════════════════════════════════
+// SUPABASE CONFIG — replace with your project URL and anon key
+// ═══════════════════════════════════════════════════════════════
+const SUPABASE_URL = 'https://vavssyxmfcmschimaqhd.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZhdnNzeXhtZmNtc2NoaW1hcWhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExMjEyNDcsImV4cCI6MjA5NjY5NzI0N30.B9h0mxHcqvRvj7WMHge_bpFyh8zDmlY8lLAWmPKst7w';
+
+// ═══════════════════════════════════════════════════════════════
+// ADMIN CREDENTIALS (SHA-256 hashed — do not store plain text)
+// ═══════════════════════════════════════════════════════════════
+const ADMIN_USER_HASH='a0329648757138b26b69f5560df44c0fe4993107975160306602ad95924ae796';
+const ADMIN_PASS_HASH='00e1c99dbb8167e94b17ca0e429058dbd8a501a75632c84742d8fcfcc49a0cd2';
+
+async function sha256(str){
+  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SUPABASE HELPERS
+// ═══════════════════════════════════════════════════════════════
+async function sbFetch(path, opts={}) {
+  const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, {
+    headers: {
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': opts.prefer || 'return=minimal',
+      ...opts.headers
+    },
+    ...opts
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(err);
+  }
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
+}
+
+async function insertBooking(entry) {
+  await sbFetch('bookings', {
+    method: 'POST',
+    prefer: 'return=minimal',
+    body: JSON.stringify(entry)
+  });
+}
+
+async function fetchBookings() {
+  return await sbFetch('bookings?order=created_at.desc', {
+    headers: { 'Prefer': 'return=representation' }
+  }) || [];
+}
+
+async function deleteBookingById(id) {
+  await sbFetch('bookings?id=eq.' + id, { method: 'DELETE' });
+}
+
+async function saveContentToDb(contentObj, coloursObj) {
+  // Upsert a single settings row with id=1
+  await sbFetch('site_settings', {
+    method: 'POST',
+    prefer: 'resolution=merge-duplicates',
+    body: JSON.stringify({ id: 1, content: contentObj, colours: coloursObj })
+  });
+}
+
+async function loadContentFromDb() {
+  const rows = await sbFetch('site_settings?id=eq.1', {
+    headers: { 'Prefer': 'return=representation' }
+  });
+  return rows && rows.length ? rows[0] : null;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// NAV
+// ═══════════════════════════════════════════════════════════════
 const ham=document.getElementById('hamburger');
 const mmenu=document.getElementById('mobile-menu');
 ham.addEventListener('click',()=>{const open=mmenu.classList.toggle('open');ham.classList.toggle('open',open);document.body.style.overflow=open?'hidden':''});
 mmenu.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{mmenu.classList.remove('open');ham.classList.remove('open');document.body.style.overflow=''}));
+
+// ═══════════════════════════════════════════════════════════════
+// SCROLL REVEAL
+// ═══════════════════════════════════════════════════════════════
 const ro=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in')})},{threshold:0.08});
 document.querySelectorAll('.reveal').forEach(el=>ro.observe(el));
+
+// ═══════════════════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════════════════
 function toast(msg,dur=4000){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),dur)}
-document.getElementById('booking-form').addEventListener('submit',e=>{
+
+// ═══════════════════════════════════════════════════════════════
+// BOOKING FORM — saves to Supabase
+// ═══════════════════════════════════════════════════════════════
+document.getElementById('booking-form').addEventListener('submit', async e=>{
   e.preventDefault();
   const name=document.getElementById('f-name').value.trim();
   const phone=document.getElementById('f-phone').value.trim();
   if(!name||!phone){toast('Please enter your name and phone number.');return}
-  const entry={id:Date.now(),date:new Date().toLocaleString('en-GB'),name,phone,email:document.getElementById('f-email').value,vehicle:document.getElementById('f-vehicle').value,reg:document.getElementById('f-reg').value.toUpperCase(),service:document.getElementById('f-service').value,message:document.getElementById('f-msg').value};
-  const b=JSON.parse(localStorage.getItem('vaghq_bookings')||'[]');
-  b.unshift(entry);localStorage.setItem('vaghq_bookings',JSON.stringify(b));
-  e.target.reset();toast("✓ Booking request sent — we'll call to confirm your slot.");
+  const btn = e.target.querySelector('.fsub');
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
+  try {
+    await insertBooking({
+      name,
+      phone,
+      email: document.getElementById('f-email').value,
+      vehicle: document.getElementById('f-vehicle').value,
+      reg: document.getElementById('f-reg').value.toUpperCase(),
+      service: document.getElementById('f-service').value,
+      message: document.getElementById('f-msg').value
+    });
+    e.target.reset();
+    toast("✓ Booking request sent — we'll call to confirm your slot.");
+  } catch(err) {
+    console.error(err);
+    toast('Something went wrong. Please call us directly on 07977 010101.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Send Booking Request →';
+  }
 });
+
+// ═══════════════════════════════════════════════════════════════
+// HIDDEN ADMIN LOGIN — triple-click the logo
+// ═══════════════════════════════════════════════════════════════
 let lc=0,lt;
 document.getElementById('nav-logo').addEventListener('click',ev=>{
   ev.preventDefault();lc++;clearTimeout(lt);
   lt=setTimeout(()=>lc=0,600);
   if(lc>=3){lc=0;if(!sessionStorage.getItem('vaghq_admin')){document.getElementById('amodal').classList.add('open');setTimeout(()=>document.getElementById('au').focus(),100)}}
 });
-function doLogin(){
+
+async function doLogin(){
   const u=document.getElementById('au').value.trim();
   const p=document.getElementById('ap').value;
-  if(u===ADMIN_USER&&p===ADMIN_PASS){
+  const [uh,ph]=await Promise.all([sha256(u),sha256(p)]);
+  if(uh===ADMIN_USER_HASH&&ph===ADMIN_PASS_HASH){
     sessionStorage.setItem('vaghq_admin','1');
     document.getElementById('amodal').classList.remove('open');
     document.getElementById('abar').classList.add('active');
     document.body.classList.add('admin-on');
     document.getElementById('aerr').style.display='none';
     document.getElementById('au').value='';document.getElementById('ap').value='';
-    loadContent();toast('✓ Admin mode active.');
+    loadContent();
+    toast('✓ Admin mode active.');
   } else {document.getElementById('aerr').style.display='block';document.getElementById('ap').value=''}
 }
 document.getElementById('alogin').addEventListener('click',doLogin);
 document.getElementById('ap').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
 document.getElementById('aclose').addEventListener('click',()=>{document.getElementById('amodal').classList.remove('open');document.getElementById('aerr').style.display='none'});
+
 document.getElementById('btn-logout').addEventListener('click',()=>{
   sessionStorage.removeItem('vaghq_admin');
   document.getElementById('abar').classList.remove('active');
@@ -657,6 +770,10 @@ document.getElementById('btn-logout').addEventListener('click',()=>{
   document.querySelectorAll('[data-editable]').forEach(el=>el.removeAttribute('contenteditable'));
   toast('Logged out.');
 });
+
+// ═══════════════════════════════════════════════════════════════
+// EDIT MODE
+// ═══════════════════════════════════════════════════════════════
 let editOn=false;
 document.getElementById('btn-edit').addEventListener('click',()=>{
   editOn=!editOn;
@@ -667,17 +784,63 @@ document.getElementById('btn-edit').addEventListener('click',()=>{
   document.querySelectorAll('[data-editable]').forEach(el=>{if(editOn)el.setAttribute('contenteditable','true');else el.removeAttribute('contenteditable')});
   if(editOn)toast('Click any highlighted text to edit it.');
 });
-function saveContent(){const saved={};document.querySelectorAll('[data-editable]').forEach(el=>{saved[el.dataset.editable]=el.innerHTML});localStorage.setItem('vaghq_content',JSON.stringify(saved))}
-function loadContent(){
-  const saved=JSON.parse(localStorage.getItem('vaghq_content')||'{}');
+
+// ═══════════════════════════════════════════════════════════════
+// SAVE / LOAD CONTENT — Supabase backed
+// ═══════════════════════════════════════════════════════════════
+function collectContent() {
+  const saved={};
+  document.querySelectorAll('[data-editable]').forEach(el=>{saved[el.dataset.editable]=el.innerHTML});
+  return saved;
+}
+function collectColours() {
+  const cmap={'c-bg':'--bg','c-surf':'--surface','c-red':'--red','c-white':'--white','c-muted':'--muted','c-line':'--line'};
+  const cols={};
+  Object.entries(cmap).forEach(([id,css])=>{const el=document.getElementById(id);if(el)cols[css]=el.value});
+  return cols;
+}
+function applyContent(saved) {
+  if(!saved) return;
   document.querySelectorAll('[data-editable]').forEach(el=>{if(saved[el.dataset.editable])el.innerHTML=saved[el.dataset.editable]});
-  const cols=JSON.parse(localStorage.getItem('vaghq_colours')||'{}');
-  Object.entries(cols).forEach(([k,v])=>document.documentElement.style.setProperty(k,v));
+}
+function applyColours(cols) {
+  if(!cols) return;
+  Object.entries(cols).forEach(([k,v])=>{
+    document.documentElement.style.setProperty(k,v);
+    if(k==='--red'){const h=v,r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);document.documentElement.style.setProperty('--red-dim',`rgba(${r},${g},${b},0.15)`)}
+  });
   const cmap={'c-bg':'--bg','c-surf':'--surface','c-red':'--red','c-white':'--white','c-muted':'--muted','c-line':'--line'};
   Object.entries(cmap).forEach(([id,css])=>{const el=document.getElementById(id);if(el&&cols[css])el.value=cols[css]});
 }
-document.getElementById('btn-save').addEventListener('click',()=>{saveContent();toast('✓ Changes saved.')});
-document.addEventListener('input',e=>{if(e.target.hasAttribute('data-editable'))saveContent()});
+
+async function saveContent() {
+  try {
+    await saveContentToDb(collectContent(), collectColours());
+    toast('✓ Changes saved.');
+  } catch(err) {
+    console.error(err);
+    toast('Save failed — check your Supabase connection.');
+  }
+}
+
+async function loadContent() {
+  try {
+    const row = await loadContentFromDb();
+    if(row) {
+      applyContent(row.content);
+      applyColours(row.colours);
+    }
+  } catch(err) {
+    console.error('Could not load saved content:', err);
+  }
+}
+
+document.getElementById('btn-save').addEventListener('click', saveContent);
+document.addEventListener('input', e=>{if(e.target.hasAttribute('data-editable')) saveContent()});
+
+// ═══════════════════════════════════════════════════════════════
+// COLOUR PICKER — live preview + auto-save
+// ═══════════════════════════════════════════════════════════════
 document.getElementById('btn-colours').addEventListener('click',()=>{document.getElementById('cpanel').classList.toggle('open');document.getElementById('bpanel').classList.remove('open')});
 const cmap2={'c-bg':'--bg','c-surf':'--surface','c-red':'--red','c-white':'--white','c-muted':'--muted','c-line':'--line'};
 Object.entries(cmap2).forEach(([id,cssVar])=>{
@@ -685,24 +848,56 @@ Object.entries(cmap2).forEach(([id,cssVar])=>{
   el.addEventListener('input',()=>{
     document.documentElement.style.setProperty(cssVar,el.value);
     if(cssVar==='--red'){const h=el.value,r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);document.documentElement.style.setProperty('--red-dim',`rgba(${r},${g},${b},0.15)`)}
-    const cols=JSON.parse(localStorage.getItem('vaghq_colours')||'{}');
-    cols[cssVar]=el.value;localStorage.setItem('vaghq_colours',JSON.stringify(cols));
   });
 });
-document.getElementById('btn-bookings').addEventListener('click',()=>{document.getElementById('cpanel').classList.remove('open');renderBookings();document.getElementById('bpanel').classList.add('open')});
+
+// ═══════════════════════════════════════════════════════════════
+// BOOKINGS PANEL — loads from Supabase (admin only)
+// ═══════════════════════════════════════════════════════════════
+document.getElementById('btn-bookings').addEventListener('click',()=>{
+  document.getElementById('cpanel').classList.remove('open');
+  renderBookings();
+  document.getElementById('bpanel').classList.add('open');
+});
 document.getElementById('close-bp').addEventListener('click',()=>document.getElementById('bpanel').classList.remove('open'));
-function renderBookings(){
-  const bs=JSON.parse(localStorage.getItem('vaghq_bookings')||'[]');
+
+async function renderBookings(){
   const c=document.getElementById('bentries');
-  if(!bs.length){c.innerHTML='<p class="nobookings">NO BOOKING REQUESTS YET</p>';return}
-  c.innerHTML=bs.map(b=>`<div class="bentry" data-id="${b.id}"><div class="beh"><span class="bdate">Submitted: ${b.date}</span><button class="bdel" onclick="delBooking(${b.id})">Delete</button></div><div><div class="bfl">Name</div><div class="bfv">${b.name||'—'}</div></div><div><div class="bfl">Phone</div><div class="bfv">${b.phone||'—'}</div></div><div><div class="bfl">Email</div><div class="bfv">${b.email||'—'}</div></div><div><div class="bfl">Vehicle</div><div class="bfv">${b.vehicle||'—'}</div></div><div><div class="bfl">Reg</div><div class="bfv">${b.reg||'—'}</div></div><div><div class="bfl">Service</div><div class="bfv">${b.service||'—'}</div></div>${b.message?`<div style="grid-column:1/-1"><div class="bfl">Notes</div><div class="bfv">${b.message}</div></div>`:''}</div>`).join('');
+  c.innerHTML='<p class="nobookings">Loading…</p>';
+  try {
+    const bs = await fetchBookings();
+    if(!bs.length){c.innerHTML='<p class="nobookings">NO BOOKING REQUESTS YET</p>';return}
+    c.innerHTML=bs.map(b=>`<div class="bentry" data-id="${b.id}"><div class="beh"><span class="bdate">Submitted: ${b.created_at ? new Date(b.created_at).toLocaleString('en-GB') : '—'}</span><button class="bdel" onclick="delBooking('${b.id}')">Delete</button></div><div><div class="bfl">Name</div><div class="bfv">${b.name||'—'}</div></div><div><div class="bfl">Phone</div><div class="bfv">${b.phone||'—'}</div></div><div><div class="bfl">Email</div><div class="bfv">${b.email||'—'}</div></div><div><div class="bfl">Vehicle</div><div class="bfv">${b.vehicle||'—'}</div></div><div><div class="bfl">Reg</div><div class="bfv">${b.reg||'—'}</div></div><div><div class="bfl">Service</div><div class="bfv">${b.service||'—'}</div></div>${b.message?`<div style="grid-column:1/-1"><div class="bfl">Notes</div><div class="bfv">${b.message}</div></div>`:''}</div>`).join('');
+  } catch(err) {
+    c.innerHTML='<p class="nobookings">Could not load bookings. Check Supabase config.</p>';
+    console.error(err);
+  }
 }
-function delBooking(id){let bs=JSON.parse(localStorage.getItem('vaghq_bookings')||'[]');bs=bs.filter(b=>b.id!==id);localStorage.setItem('vaghq_bookings',JSON.stringify(bs));renderBookings()}
-(function(){
-  const saved=JSON.parse(localStorage.getItem('vaghq_content')||'{}');
-  document.querySelectorAll('[data-editable]').forEach(el=>{if(saved[el.dataset.editable])el.innerHTML=saved[el.dataset.editable]});
-  const cols=JSON.parse(localStorage.getItem('vaghq_colours')||'{}');
-  Object.entries(cols).forEach(([k,v])=>{document.documentElement.style.setProperty(k,v);if(k==='--red'){const h=v,r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);document.documentElement.style.setProperty('--red-dim',`rgba(${r},${g},${b},0.15)`)}});
+
+async function delBooking(id){
+  try {
+    await deleteBookingById(id);
+    renderBookings();
+  } catch(err) {
+    toast('Could not delete — check Supabase config.');
+    console.error(err);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ON PAGE LOAD — restore saved content & colours from Supabase
+// ═══════════════════════════════════════════════════════════════
+(async function(){
+  try {
+    const row = await loadContentFromDb();
+    if(row) {
+      applyContent(row.content);
+      applyColours(row.colours);
+    }
+  } catch(err) {
+    // Supabase not yet configured — site loads normally
+    console.info('Supabase not configured yet — using defaults.');
+  }
 })();
 </script>
 
